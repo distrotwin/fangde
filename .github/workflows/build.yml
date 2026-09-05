@@ -24,7 +24,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        # combo 必须是对象数组而不是 include：include 不与其它轴做笛卡尔积，
+        # 实测三个 tier job 被 include 逐条覆盖、最后一条赢家通吃，只建出
+        # tiger-arm64 三个镜像而 build 全绿 —— 静默少建 12 个。
+        combo:
           - { did: v3.1,  arch: amd64 }
           - { did: panda, arch: amd64 }
           - { did: panda, arch: arm64 }
@@ -33,10 +36,10 @@ jobs:
         tier: [micro, base, devel]
     uses: distrotwin/buildkit/.github/workflows/build-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
-      distro-id: ${{ matrix.did }}
-      arch:      ${{ matrix.arch }}
+      distro-id: ${{ matrix.combo.did }}
+      arch:      ${{ matrix.combo.arch }}
       tier:      ${{ matrix.tier }}
-      runner:    ${{ matrix.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
+      runner:    ${{ matrix.combo.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
 
   test:
     needs: [build]
@@ -44,7 +47,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        # combo 必须是对象数组而不是 include：include 不与其它轴做笛卡尔积，
+        # 实测三个 tier job 被 include 逐条覆盖、最后一条赢家通吃，只建出
+        # tiger-arm64 三个镜像而 build 全绿 —— 静默少建 12 个。
+        combo:
           - { did: v3.1,  arch: amd64 }
           - { did: panda, arch: amd64 }
           - { did: panda, arch: arm64 }
@@ -53,10 +59,10 @@ jobs:
         tier: [micro, base, devel]
     uses: distrotwin/buildkit/.github/workflows/test-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
-      distro-id: ${{ matrix.did }}
-      arch:      ${{ matrix.arch }}
+      distro-id: ${{ matrix.combo.did }}
+      arch:      ${{ matrix.combo.arch }}
       tier:      ${{ matrix.tier }}
-      runner:    ${{ matrix.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
+      runner:    ${{ matrix.combo.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
 
   # tiger 实测 6 份 252 项；v3.1/panda 首轮按保守地板，绿后对齐
   report:
