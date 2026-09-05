@@ -54,7 +54,7 @@ panda 的 suite 拓扑要如实说明：通用 `panda` 是厂商覆盖层（不�
 
 ## 龙芯为什么不在
 
-tiger 源里有 loongarch64 树，但它是**旧世界** ABI（动态链接器 `/lib64/ld.so.1`、glibc 2.28、`.lns8` 包标记），上游 QEMU 不支持旧世界的信号系统调用，托管 runner 上造不出来。判据与完整排查记录见 buildkit 的 `docs/downstream-repo.md`。
+方德全部三处龙芯树都查过：`update.os` 的 NFS4.0/LoongarchOS、`repos.os` 的 tiger-loongarch、`rpm/nfs` 的 nfs-soaring-loongarch——全是**旧世界** ABI（动态链接器 `/lib64/ld.so.1`、glibc 2.28，新世界的 `ld-linux-loongarch-*` 零命中），上游 QEMU 不支持旧世界的信号系统调用，托管 runner 上造不出来。判据与完整排查记录见 buildkit 的 `docs/downstream-repo.md`。新世界 loong64 在方德没有公开材料，查无。
 
 ## 镜像是怎么造的
 
