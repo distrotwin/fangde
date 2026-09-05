@@ -72,7 +72,7 @@ jobs:
     with:
       distros:  '["v3.1","panda","tiger"]'
       expected: 15
-      baseline: 560
+      baseline: 610
 
   publish:
     needs: [test, report]
