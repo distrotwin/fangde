@@ -26,7 +26,7 @@ jobs:
       matrix:
         arch: [amd64, arm64]
         tier: [micro, base, devel]
-    uses: distrotwin/buildkit/.github/workflows/build-one.yml@70ddbf2837df311bc67fc5fe1fa7a3c728b7d8d9
+    uses: distrotwin/buildkit/.github/workflows/build-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
       distro-id: tiger
       arch:      ${{ matrix.arch }}
@@ -41,7 +41,7 @@ jobs:
       matrix:
         arch: [amd64, arm64]
         tier: [micro, base, devel]
-    uses: distrotwin/buildkit/.github/workflows/test-one.yml@70ddbf2837df311bc67fc5fe1fa7a3c728b7d8d9
+    uses: distrotwin/buildkit/.github/workflows/test-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
       distro-id: tiger
       arch:      ${{ matrix.arch }}
@@ -52,7 +52,7 @@ jobs:
   report:
     needs: [test]
     if: always()
-    uses: distrotwin/buildkit/.github/workflows/report.yml@70ddbf2837df311bc67fc5fe1fa7a3c728b7d8d9
+    uses: distrotwin/buildkit/.github/workflows/report.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
       distros:  '["tiger"]'
       expected: 6
@@ -68,7 +68,7 @@ jobs:
           - { tier: micro, latest: false }
           - { tier: base,  latest: false }
           - { tier: devel, latest: true }
-    uses: distrotwin/buildkit/.github/workflows/publish-one.yml@70ddbf2837df311bc67fc5fe1fa7a3c728b7d8d9
+    uses: distrotwin/buildkit/.github/workflows/publish-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
       distro-id:  tiger
       tier:       ${{ matrix.tier }}
