@@ -3,10 +3,10 @@ name: 构建镜像
 # 下游仓库唯一的 workflow：只定义矩阵、调用 buildkit 的可复用 workflow。
 # 只允许手动触发——真正需要的是「我要出一批镜像了」这个显式动作。
 #
-# tiger 公开源有 amd64 / arm64 / loongarch64 三个架构，但 loongarch64 是旧世界
-# ABI（filelists 实测 /lib64/ld.so.1、glibc 2.28、.lns8 标记），上游 QEMU 造不
-# 出来（判据与七轮排查记录见 buildkit docs/downstream-repo.md），所以矩阵里
-# 只有前两个。
+# 三代桌面线：v3.1（cdos/Mint 混血，glibc 2.24，仅 amd64）、panda（buster，
+# 2.28，amd64+arm64）、tiger（bullseye，2.31，amd64+arm64）。tiger 的
+# loongarch64 是旧世界 ABI，托管 runner 造不出来（判据见 buildkit
+# docs/downstream-repo.md），不进矩阵。
 on:
   workflow_dispatch:
     inputs:
@@ -24,11 +24,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [amd64, arm64]
+        include:
+          - { did: v3.1,  arch: amd64 }
+          - { did: panda, arch: amd64 }
+          - { did: panda, arch: arm64 }
+          - { did: tiger, arch: amd64 }
+          - { did: tiger, arch: arm64 }
         tier: [micro, base, devel]
     uses: distrotwin/buildkit/.github/workflows/build-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
-      distro-id: tiger
+      distro-id: ${{ matrix.did }}
       arch:      ${{ matrix.arch }}
       tier:      ${{ matrix.tier }}
       runner:    ${{ matrix.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
@@ -39,24 +44,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [amd64, arm64]
+        include:
+          - { did: v3.1,  arch: amd64 }
+          - { did: panda, arch: amd64 }
+          - { did: panda, arch: arm64 }
+          - { did: tiger, arch: amd64 }
+          - { did: tiger, arch: arm64 }
         tier: [micro, base, devel]
     uses: distrotwin/buildkit/.github/workflows/test-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
-      distro-id: tiger
+      distro-id: ${{ matrix.did }}
       arch:      ${{ matrix.arch }}
       tier:      ${{ matrix.tier }}
       runner:    ${{ matrix.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
 
-  # 首轮按保守地板跑，绿了之后按实际结果对齐（制度第 9 步）
+  # tiger 实测 6 份 252 项；v3.1/panda 首轮按保守地板，绿后对齐
   report:
     needs: [test]
     if: always()
     uses: distrotwin/buildkit/.github/workflows/report.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
-      distros:  '["tiger"]'
-      expected: 6
-      baseline: 245
+      distros:  '["v3.1","panda","tiger"]'
+      expected: 15
+      baseline: 560
 
   publish:
     needs: [test, report]
@@ -65,14 +75,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { tier: micro, latest: false }
-          - { tier: base,  latest: false }
-          - { tier: devel, latest: true }
+          - { did: v3.1,  prefix: v3.1,  tier: micro, arches: amd64,         latest: false }
+          - { did: v3.1,  prefix: v3.1,  tier: base,  arches: amd64,         latest: false }
+          - { did: v3.1,  prefix: v3.1,  tier: devel, arches: amd64,         latest: false }
+          - { did: panda, prefix: panda, tier: micro, arches: "amd64 arm64", latest: false }
+          - { did: panda, prefix: panda, tier: base,  arches: "amd64 arm64", latest: false }
+          - { did: panda, prefix: panda, tier: devel, arches: "amd64 arm64", latest: false }
+          - { did: tiger, prefix: tiger, tier: micro, arches: "amd64 arm64", latest: false }
+          - { did: tiger, prefix: tiger, tier: base,  arches: "amd64 arm64", latest: false }
+          # latest 指向最新一代（tiger）的 devel
+          - { did: tiger, prefix: tiger, tier: devel, arches: "amd64 arm64", latest: true }
     uses: distrotwin/buildkit/.github/workflows/publish-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
     with:
-      distro-id:  tiger
+      distro-id:  ${{ matrix.did }}
       tier:       ${{ matrix.tier }}
       image:      fangde
-      tag-prefix: tiger
-      arches:     amd64 arm64
+      tag-prefix: ${{ matrix.prefix }}
+      arches:     ${{ matrix.arches }}
       latest:     ${{ matrix.latest }}
