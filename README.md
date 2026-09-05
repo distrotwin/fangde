@@ -1,6 +1,6 @@
 # 方德桌面操作系统（tiger 线）· 构建与测试镜像
 
-对着中科方德公开 apt 源（tiger 产品线）自举出来的容器环境，用于**软件构建、打包与兼容性测试**。Debian 11 系、glibc 2.31 档 ABI，amd64 / arm64 两架构、三个档位，公开在 GHCR。
+对着中科方德公开 apt 源（tiger 产品线）自举出来的容器环境，用于**软件构建、打包与兼容性测试**。Debian 11 系、glibc 2.31 档 ABI，amd64 / arm64 两架构、三个档位，公开在 GHCR。最近一轮 6 个镜像、252 项检查全部通过，零异常。
 
 ```bash
 docker run --rm ghcr.io/distrotwin/fangde:tiger-devel \
