@@ -34,7 +34,7 @@ jobs:
           - { did: tiger, arch: amd64 }
           - { did: tiger, arch: arm64 }
         tier: [micro, base, devel]
-    uses: distrotwin/buildkit/.github/workflows/build-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
+    uses: distrotwin/buildkit/.github/workflows/build-one.yml@789035c9c3f2c7d1275b306983251541d25d312b
     with:
       distro-id: ${{ matrix.combo.did }}
       arch:      ${{ matrix.combo.arch }}
@@ -57,7 +57,7 @@ jobs:
           - { did: tiger, arch: amd64 }
           - { did: tiger, arch: arm64 }
         tier: [micro, base, devel]
-    uses: distrotwin/buildkit/.github/workflows/test-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
+    uses: distrotwin/buildkit/.github/workflows/test-one.yml@789035c9c3f2c7d1275b306983251541d25d312b
     with:
       distro-id: ${{ matrix.combo.did }}
       arch:      ${{ matrix.combo.arch }}
@@ -68,7 +68,7 @@ jobs:
   report:
     needs: [test]
     if: always()
-    uses: distrotwin/buildkit/.github/workflows/report.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
+    uses: distrotwin/buildkit/.github/workflows/report.yml@789035c9c3f2c7d1275b306983251541d25d312b
     with:
       distros:  '["v3.1","panda","tiger"]'
       expected: 15
@@ -91,7 +91,7 @@ jobs:
           - { did: tiger, prefix: tiger, tier: base,  arches: "amd64 arm64", latest: false }
           # latest 指向最新一代（tiger）的 devel
           - { did: tiger, prefix: tiger, tier: devel, arches: "amd64 arm64", latest: true }
-    uses: distrotwin/buildkit/.github/workflows/publish-one.yml@6d88d822c9643f0b933e2b776f21fc50aea34e66
+    uses: distrotwin/buildkit/.github/workflows/publish-one.yml@789035c9c3f2c7d1275b306983251541d25d312b
     with:
       distro-id:  ${{ matrix.did }}
       tier:       ${{ matrix.tier }}
