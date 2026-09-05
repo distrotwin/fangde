@@ -1,0 +1,78 @@
+name: 构建镜像
+
+# 下游仓库唯一的 workflow：只定义矩阵、调用 buildkit 的可复用 workflow。
+# 只允许手动触发——真正需要的是「我要出一批镜像了」这个显式动作。
+#
+# tiger 公开源有 amd64 / arm64 / loongarch64 三个架构，但 loongarch64 是旧世界
+# ABI（filelists 实测 /lib64/ld.so.1、glibc 2.28、.lns8 标记），上游 QEMU 造不
+# 出来（判据与七轮排查记录见 buildkit docs/downstream-repo.md），所以矩阵里
+# 只有前两个。
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "测试全绿后发布到 GHCR（默认不发布）"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+        tier: [micro, base, devel]
+    uses: distrotwin/buildkit/.github/workflows/build-one.yml@70ddbf2837df311bc67fc5fe1fa7a3c728b7d8d9
+    with:
+      distro-id: tiger
+      arch:      ${{ matrix.arch }}
+      tier:      ${{ matrix.tier }}
+      runner:    ${{ matrix.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
+
+  test:
+    needs: [build]
+    if: always()
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+        tier: [micro, base, devel]
+    uses: distrotwin/buildkit/.github/workflows/test-one.yml@70ddbf2837df311bc67fc5fe1fa7a3c728b7d8d9
+    with:
+      distro-id: tiger
+      arch:      ${{ matrix.arch }}
+      tier:      ${{ matrix.tier }}
+      runner:    ${{ matrix.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04' }}
+
+  # 首轮按保守地板跑，绿了之后按实际结果对齐（制度第 9 步）
+  report:
+    needs: [test]
+    if: always()
+    uses: distrotwin/buildkit/.github/workflows/report.yml@70ddbf2837df311bc67fc5fe1fa7a3c728b7d8d9
+    with:
+      distros:  '["tiger"]'
+      expected: 6
+      baseline: 200
+
+  publish:
+    needs: [test, report]
+    if: inputs.publish && needs.test.result == 'success' && needs.report.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { tier: micro, latest: false }
+          - { tier: base,  latest: false }
+          - { tier: devel, latest: true }
+    uses: distrotwin/buildkit/.github/workflows/publish-one.yml@70ddbf2837df311bc67fc5fe1fa7a3c728b7d8d9
+    with:
+      distro-id:  tiger
+      tier:       ${{ matrix.tier }}
+      image:      fangde
+      tag-prefix: tiger
+      arches:     amd64 arm64
+      latest:     ${{ matrix.latest }}
