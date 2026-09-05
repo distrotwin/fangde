@@ -56,7 +56,7 @@ jobs:
     with:
       distros:  '["tiger"]'
       expected: 6
-      baseline: 200
+      baseline: 245
 
   publish:
     needs: [test, report]
