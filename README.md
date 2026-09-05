@@ -1,6 +1,6 @@
-# 方德桌面操作系统（tiger 线）· 构建与测试镜像
+# 方德桌面操作系统 · 构建与测试镜像
 
-对着中科方德公开 apt 源（tiger 产品线）自举出来的容器环境，用于**软件构建、打包与兼容性测试**。Debian 11 系、glibc 2.31 档 ABI，amd64 / arm64 两架构、三个档位，公开在 GHCR。最近一轮 6 个镜像、252 项检查全部通过，零异常。
+对着中科方德公开 apt 源自举出来的容器环境，用于**软件构建、打包与兼容性测试**。覆盖三代桌面线：`v3.1`（cdos，glibc 2.24）、`panda`（Debian 10 系，2.28）、`tiger`（Debian 11 系，2.31），最多 amd64 / arm64 两架构、各三档，公开在 GHCR。最近一轮 15 个镜像、630 项检查全部通过，零异常。
 
 ```bash
 docker run --rm ghcr.io/distrotwin/fangde:tiger-devel \
@@ -38,13 +38,15 @@ objdump -T ab | grep -oE 'GLIBC_[0-9.]+' | sort -uV | tail -1
 
 ## 选哪一个
 
-| tag | 里面有什么 | 适合 |
-|---|---|---|
-| `tiger-micro` | 能跑 shell 的最小根系统，无 apt | 跑编好的二进制、当测试底座 |
-| `tiger-base` | micro + apt/python3/systemd/常用工具 | 一般兼容性验证 |
-| `tiger-devel` | base + gcc/g++/make/dpkg-dev | 编译、打 deb |
+| 代 | 底座（实测身份） | glibc / gcc | 架构 | 状态 |
+|---|---|---|---|---|
+| `v3.1` | cdos 3.0（Mint/Ubuntu 包混于 Debian 9 底盘，`lsb-base 4.1+Debian11ubuntu6mint1+1cdos2`） | 2.24 / 6.2.1 | amd64 | 2022-01 停更 |
+| `panda` | Debian 10 buster 系 | 2.28 / 8.3.0 | amd64+arm64 | 2022-11 停更 |
+| `tiger` | Debian NFSDesktop 11 (bullseye) | 2.31 / 10.2.1 | amd64+arm64 | 现役（2025-10） |
 
-`latest` 指向 `tiger-devel`。基线（跑镜像实测）：glibc 2.31、libstdc++.so.6.0.28（GLIBCXX ≤ 3.4.28）、gcc 10.2.1。
+每代三档：`<代>-micro`（最小根系统，无 apt）、`<代>-base`（+apt/python3/systemd）、`<代>-devel`（+gcc/g++/make/dpkg-dev）。`latest` 指向 `tiger-devel`。
+
+panda 的 suite 拓扑要如实说明：通用 `panda` 是厂商覆盖层（不含 libc6/dpkg，不自洽），它的 upstream 索引是空目录；完整 buster 上游取自设备线（amd64 用 g120，arm64 用 kylin990），security 同线，合并时厂商覆盖层按版本正常胜出。panda 镜像的 pam `common-*` 由构建注入 buster 规范默认值——厂商 libpam-modules 的 postinst 假定它们已存在，而那本该由 pam-auth-update 生成。
 
 ## 为什么叫 tiger 而不是某个版本号
 
